@@ -1,0 +1,15 @@
+embeddings:
+  path: sentence-transformers/all-MiniLM-L6-v2
+  backend: qdrant_txtai.ann.qdrant.Qdrant
+  metric: l2
+  qdrant:
+    host: localhost
+    port: 6333
+    grpc_port: 6334
+    prefer_grpc: true
+    collection: CustomCollectionName
+    hnsw:
+      m: 8
+      ef_construct: 256
+      full_scan_threshold:
+      ef_search: 512
