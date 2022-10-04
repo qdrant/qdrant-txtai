@@ -16,6 +16,7 @@ qdrant_client = "0.10.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1"
+pre-commit = "^2.20.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
