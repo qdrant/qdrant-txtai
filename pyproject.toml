@@ -4,7 +4,7 @@ version = "0.10.2"
 description = "An integration of Qdrant ANN vector database backend with txtai"
 authors = ["Kacper Łukawski <kacper.lukawski@qdrant.com>"]
 packages = [
-    {include = "qdrant_txtai"}
+    {include = "qdrant_txtai", from = "src"}
 ]
 readme = "README.md"
 license = "Apache 2.0"
