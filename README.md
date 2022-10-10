@@ -41,10 +41,8 @@ providing configuration in a YAML file.
 from txtai.embeddings import Embeddings
 
 embeddings = Embeddings({
-    "embeddings": {
-        "path": "sentence-transformers/all-MiniLM-L6-v2",
-        "backend": "qdrant_txtai.ann.qdrant.Qdrant",
-    },
+    "path": "sentence-transformers/all-MiniLM-L6-v2",
+    "backend": "qdrant_txtai.ann.qdrant.Qdrant",
 })
 embeddings.index([(0, "Correct", None), (1, "Not what we hoped", None)])
 result = embeddings.search("positive", 1)
