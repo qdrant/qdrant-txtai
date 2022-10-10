@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qdrant-txtai"
-version = "0.10.2"
+version = "0.10.3"
 description = "An integration of Qdrant ANN vector database backend with txtai"
 authors = ["Kacper Łukawski <kacper.lukawski@qdrant.com>"]
 packages = [
