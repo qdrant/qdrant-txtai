@@ -1,5 +1,6 @@
 import warnings
 
+import qdrant_client
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import (
     PointIdsList,
@@ -35,7 +36,10 @@ class Qdrant(ANN):
         self.collection_name = self.qdrant_config.get("collection", "embeddings")
 
         # Initial offset is set to the number of existing rows
-        self.config["offset"] = self.count()
+        try:
+            self.config["offset"] = self.count()
+        except qdrant_client.http.exceptions.UnexpectedResponse:
+            self.config["offset"] = 0
 
     def load(self, path):
         # Since Qdrant does not rely on files, there is no need to load anything
