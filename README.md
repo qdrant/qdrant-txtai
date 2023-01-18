@@ -78,11 +78,13 @@ embeddings:
   backend: qdrant_txtai.ann.qdrant.Qdrant
   metric: l2 # allowed values: l2 / cosine / ip
   qdrant:
-    host: localhost
+    host: qdrant.host
     port: 6333
     grpc_port: 6334
     prefer_grpc: true
     collection: CustomCollectionName
+    https: true # for Qdrant Cloud
+    api_key: XYZ # for Qdrant Cloud
     hnsw:
       m: 8
       ef_construct: 256
