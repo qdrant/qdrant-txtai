@@ -432,7 +432,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "qdrant-client"
-version = "0.11.5"
+version = "0.11.6"
 description = "Client library for the Qdrant vector search engine"
 category = "main"
 optional = false
@@ -700,7 +700,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "flake8 (<5)", "pytest-co
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "9ccc85947889f77bee9166e2c34459465ec85748940a8561339b0637ff4a3f2a"
+content-hash = "c078a9ed623eb24c56402f7eed676cc1b818ea2c10cbe8ed8dc61d3e9434c08c"
 
 [metadata.files]
 anyio = []
