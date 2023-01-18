@@ -32,7 +32,11 @@ class Qdrant(ANN):
         port = self.qdrant_config.get("port", 6333)
         grpc_port = self.qdrant_config.get("grpc_port", 6334)
         prefer_grpc = self.qdrant_config.get("prefer_grpc", False)
-        self.qdrant_client = QdrantClient(hostname, port, grpc_port, prefer_grpc)
+        https = self.qdrant_config.get("https")
+        api_key = self.qdrant_config.get("api_key")
+        self.qdrant_client = QdrantClient(
+            hostname, port, grpc_port, prefer_grpc, https=https, api_key=api_key,
+        )
         self.collection_name = self.qdrant_config.get("collection", "embeddings")
 
         # Initial offset is set to the number of existing rows
