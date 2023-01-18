@@ -1,0 +1,17 @@
+embeddings:
+  path: sentence-transformers/all-MiniLM-L6-v2
+  backend: qdrant_txtai.ann.qdrant.Qdrant
+  metric: l2 # allowed values: l2 / cosine / ip
+  qdrant:
+    host: xxx.us-east-1-0.aws.cloud.qdrant.io
+    port: 6333
+    grpc_port: 6334
+    prefer_grpc: true
+    https: true
+    api_key: yourownapikey
+    collection: CustomCollectionName
+    hnsw:
+      m: 8
+      ef_construct: 256
+      full_scan_threshold:
+      ef_search: 512
