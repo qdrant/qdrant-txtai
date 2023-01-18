@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "qdrant-txtai"
-version = "0.11.6"
+version = "0.11.7"
 description = "An integration of Qdrant ANN vector database backend with txtai"
 authors = ["Kacper Łukawski <kacper.lukawski@qdrant.com>"]
 packages = [
@@ -12,7 +12,7 @@ license = "Apache 2.0"
 [tool.poetry.dependencies]
 python = "^3.7"
 txtai = "^5.0.0"
-qdrant-client = "0.11.6"
+qdrant-client = "0.11.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1"
