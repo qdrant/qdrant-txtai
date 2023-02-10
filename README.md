@@ -29,7 +29,7 @@ Running the txtai application with Qdrant as a vector storage requires launching
 a Qdrant instance. That might be done easily with Docker:
 
 ```bash
-docker run -p 6333:6333 -p:6334:6334 qdrant/qdrant:v0.10.2
+docker run -p 6333:6333 -p:6334:6334 qdrant/qdrant:v1.0.1
 ```
 
 Running the txtai application might be done either programmatically or by 

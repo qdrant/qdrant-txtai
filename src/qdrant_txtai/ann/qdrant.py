@@ -7,7 +7,8 @@ from qdrant_client.http.models import (
     VectorParams,
     Distance,
     HnswConfigDiff,
-    SearchRequest, SearchParams,
+    SearchRequest,
+    SearchParams,
 )
 from txtai.ann import ANN
 
@@ -28,14 +29,25 @@ class Qdrant(ANN):
 
         # Load Qdrant specific configuration from the nested configuration dict
         self.qdrant_config = self.config.get("qdrant", {})
-        hostname = self.qdrant_config.get("host", "localhost")
+        url = self.qdrant_config.get("url")
         port = self.qdrant_config.get("port", 6333)
         grpc_port = self.qdrant_config.get("grpc_port", 6334)
         prefer_grpc = self.qdrant_config.get("prefer_grpc", False)
         https = self.qdrant_config.get("https")
         api_key = self.qdrant_config.get("api_key")
+        prefix = self.qdrant_config.get("prefix")
+        timeout = self.qdrant_config.get("timeout")
+        host = self.qdrant_config.get("host")
         self.qdrant_client = QdrantClient(
-            hostname, port, grpc_port, prefer_grpc, https=https, api_key=api_key,
+            url=url,
+            port=port,
+            grpc_port=grpc_port,
+            prefer_grpc=prefer_grpc,
+            https=https,
+            api_key=api_key,
+            prefix=prefix,
+            timeout=timeout,
+            host=host,
         )
         self.collection_name = self.qdrant_config.get("collection", "embeddings")
 
@@ -51,7 +63,8 @@ class Qdrant(ANN):
         # effectively allowing to use different embeddings.
         warnings.warn(
             "Trying to call .load method on Qdrant ANN backend. "
-            "It won't have any effect.", UserWarning,
+            "It won't have any effect.",
+            UserWarning,
         )
 
     def index(self, embeddings):
