@@ -1,7 +1,8 @@
 import warnings
 
-import qdrant_client
+from grpc import RpcError
 from qdrant_client import QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import (
     PointIdsList,
     VectorParams,
@@ -29,6 +30,7 @@ class Qdrant(ANN):
 
         # Load Qdrant specific configuration from the nested configuration dict
         self.qdrant_config = self.config.get("qdrant", {})
+        location = self.qdrant_config.get("location")
         url = self.qdrant_config.get("url")
         port = self.qdrant_config.get("port", 6333)
         grpc_port = self.qdrant_config.get("grpc_port", 6334)
@@ -38,7 +40,9 @@ class Qdrant(ANN):
         prefix = self.qdrant_config.get("prefix")
         timeout = self.qdrant_config.get("timeout")
         host = self.qdrant_config.get("host")
+        path = self.qdrant_config.get("path")
         self.qdrant_client = QdrantClient(
+            location=location,
             url=url,
             port=port,
             grpc_port=grpc_port,
@@ -48,13 +52,14 @@ class Qdrant(ANN):
             prefix=prefix,
             timeout=timeout,
             host=host,
+            path=path,
         )
         self.collection_name = self.qdrant_config.get("collection", "embeddings")
 
         # Initial offset is set to the number of existing rows
         try:
             self.config["offset"] = self.count()
-        except qdrant_client.http.exceptions.UnexpectedResponse:
+        except (UnexpectedResponse, RpcError, ValueError):
             self.config["offset"] = 0
 
     def load(self, path):
@@ -90,14 +95,14 @@ class Qdrant(ANN):
 
     def append(self, embeddings):
         offset = self.config.get("offset", 0)
-        new = embeddings.shape[0]
-        ids = list(range(offset, offset + new))
+        new_count = embeddings.shape[0]
+        ids = list(range(offset, offset + new_count))
         self.qdrant_client.upload_collection(
             collection_name=self.collection_name,
             vectors=embeddings,
             ids=ids,
         )
-        self.config["offset"] += new
+        self.config["offset"] += new_count
 
     def delete(self, ids):
         self.qdrant_client.delete(
