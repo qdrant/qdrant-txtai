@@ -8,8 +8,5 @@ embeddings:
     grpc_port: 6334
     prefer_grpc: true
     collection: CustomCollectionName
-    hnsw:
-      m: 8
-      ef_construct: 256
-      full_scan_threshold:
-      ef_search: 512
+    search_params:
+          hnsw_ef: 256

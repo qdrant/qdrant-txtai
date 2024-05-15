@@ -3,11 +3,13 @@ from txtai.embeddings import Embeddings
 
 def test_in_memory_embeddings():
     config = {
-        "path": "sentence-transformers/all-MiniLM-L6-v2",
+        "embeddings": {
+            "path": "sentence-transformers/all-MiniLM-L6-v2",
+        },
         "backend": "qdrant_txtai.ann.qdrant.Qdrant",
         "qdrant": {
             "location": ":memory:",
-        }
+        },
     }
 
     embeddings = Embeddings(config)
