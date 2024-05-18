@@ -1,8 +1,9 @@
-from txtai.app import Application
-from txtai.embeddings import Embeddings
+import txtai
+import os
 
-config = Application.read("./app.yml")
-embeddings = Embeddings(config["embeddings"])
-embeddings.index([(0, "Correct", None), (1, "Not what we hoped", None)])
+os.environ["config"] = "app.yml"
+
+embeddings = txtai.Embeddings()
+embeddings.index(["Correct", "Not what we hoped"])
 result = embeddings.search("positive", 1)
 print(result)

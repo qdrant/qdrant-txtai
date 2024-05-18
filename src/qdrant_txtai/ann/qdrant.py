@@ -1,60 +1,50 @@
 import warnings
+from txtai.ann import ANN
 
 from grpc import RpcError
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.http.models import (
-    PointIdsList,
-    VectorParams,
-    Distance,
-    HnswConfigDiff,
-    SearchRequest,
-    SearchParams,
-)
-from txtai.ann import ANN
+        PointIdsList,
+        VectorParams,
+        Distance,
+        SearchRequest,
+        SearchParams,
+    )
+
 
 
 class Qdrant(ANN):
     """
-    ANN implementation using Qdrant server as a backend.
+    ANN implementation using Qdrant - https://qdrant.tech as a backend.
     """
 
-    DISTANCE = {
+    DISTANCE_MAPPING = {
         "cosine": Distance.COSINE,
         "l2": Distance.EUCLID,
         "ip": Distance.DOT,
+        "l1": Distance.MANHATTAN,
     }
 
     def __init__(self, config):
         super().__init__(config)
 
-        # Load Qdrant specific configuration from the nested configuration dict
         self.qdrant_config = self.config.get("qdrant", {})
-        location = self.qdrant_config.get("location")
-        url = self.qdrant_config.get("url")
-        port = self.qdrant_config.get("port", 6333)
-        grpc_port = self.qdrant_config.get("grpc_port", 6334)
-        prefer_grpc = self.qdrant_config.get("prefer_grpc", False)
-        https = self.qdrant_config.get("https")
-        api_key = self.qdrant_config.get("api_key")
-        prefix = self.qdrant_config.get("prefix")
-        timeout = self.qdrant_config.get("timeout")
-        host = self.qdrant_config.get("host")
-        path = self.qdrant_config.get("path")
+        self.collection_name = self.qdrant_config.get("collection", "txtai-embeddings")
         self.qdrant_client = QdrantClient(
-            location=location,
-            url=url,
-            port=port,
-            grpc_port=grpc_port,
-            prefer_grpc=prefer_grpc,
-            https=https,
-            api_key=api_key,
-            prefix=prefix,
-            timeout=timeout,
-            host=host,
-            path=path,
+            location=self.qdrant_config.get("location"),
+            url=self.qdrant_config.get("url"),
+            port=self.qdrant_config.get("port", 6333),
+            grpc_port=self.qdrant_config.get("grpc_port", 6334),
+            prefer_grpc=self.qdrant_config.get("prefer_grpc", False),
+            https=self.qdrant_config.get("https"),
+            api_key=self.qdrant_config.get("api_key"),
+            prefix=self.qdrant_config.get("prefix"),
+            timeout=self.qdrant_config.get("timeout"),
+            host=self.qdrant_config.get("host"),
+            path=self.qdrant_config.get("path"),
+            grpc_options=self.qdrant_config.get("grpc_options"),
         )
-        self.collection_name = self.qdrant_config.get("collection", "embeddings")
 
         # Initial offset is set to the number of existing rows
         try:
@@ -62,32 +52,20 @@ class Qdrant(ANN):
         except (UnexpectedResponse, RpcError, ValueError):
             self.config["offset"] = 0
 
-    def load(self, path):
-        # Since Qdrant does not rely on files, there is no need to load anything
-        # from given path. Instead, the file path is used as a collection name,
-        # effectively allowing to use different embeddings.
-        warnings.warn(
-            "Trying to call .load method on Qdrant ANN backend. "
-            "It won't have any effect.",
-            UserWarning,
-        )
-
     def index(self, embeddings):
         vector_size = self.config.get("dimensions")
         metric_name = self.config.get("metric", "cosine")
-        hnsw_config = self.qdrant_config.get("hnsw", {})
+        if metric_name not in self.DISTANCE_MAPPING:
+            raise ValueError(f"Unsupported Qdrant similarity metric: {metric_name}")
+        collection_config = self.qdrant_config.get("collection_config", {})
 
         self.qdrant_client.recreate_collection(
             collection_name=self.collection_name,
             vectors_config=VectorParams(
                 size=vector_size,
-                distance=self.DISTANCE[metric_name],
+                distance=self.DISTANCE_MAPPING[metric_name],
             ),
-            hnsw_config=HnswConfigDiff(
-                m=hnsw_config.get("m"),
-                ef_construct=hnsw_config.get("ef_construct"),
-                full_scan_threshold=hnsw_config.get("full_scan_threshold"),
-            ),
+            **collection_config,
         )
 
         self.config["offset"] = 0
@@ -111,14 +89,13 @@ class Qdrant(ANN):
         )
 
     def search(self, queries, limit):
-        hnsw_config = self.qdrant_config.get("hnsw", {})
-        ef_search = hnsw_config.get("ef_search")
+        search_params = self.qdrant_config.get("search_params", {})
         search_results = self.qdrant_client.search_batch(
             collection_name=self.collection_name,
             requests=[
                 SearchRequest(
                     vector=query.tolist(),
-                    params=SearchParams(hnsw_ef=ef_search),
+                    params=SearchParams(**search_params),
                     limit=limit,
                 )
                 for query in queries
@@ -136,7 +113,14 @@ class Qdrant(ANN):
         )
         return result.count
 
+    def load(self, path):
+        warnings.warn(
+            "Trying to call .load method on Qdrant ANN backend. " "This is redundant and won't have any effect.",
+            UserWarning,
+        )
+
     def save(self, path):
-        # All the indexed embeddings are already saved in a Qdrant collection,
-        # so there is no further need to perform any other action.
-        pass
+        warnings.warn(
+            "Trying to call .save method on Qdrant ANN backend. " "This is redundant and won't have any effect.",
+            UserWarning,
+        )
