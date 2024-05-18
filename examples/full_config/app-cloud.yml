@@ -10,8 +10,5 @@ embeddings:
     https: true
     api_key: yourownapikey
     collection: CustomCollectionName
-    hnsw:
-      m: 8
-      ef_construct: 256
-      full_scan_threshold:
-      ef_search: 512
+    search_params:
+          hnsw_ef: 100

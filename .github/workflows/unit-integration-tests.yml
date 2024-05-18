@@ -9,19 +9,21 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
-
+    services:
+      qdrant:
+        image: qdrant/qdrant
+        ports:
+          - 6333:6333
     strategy:
       matrix:
         python-version:
           - '3.8.x'
           - '3.9.x'
           - '3.10.x'
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+          - '3.11.x'
+          - '3.12.x'
 
-    name: Python ${{ matrix.python-version }} test on ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }} test on ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -37,4 +39,3 @@ jobs:
       - name: Run tests
         run: |
           pytest
-        shell: bash
