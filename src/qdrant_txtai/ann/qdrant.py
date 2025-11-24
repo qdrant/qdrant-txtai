@@ -44,6 +44,7 @@ class Qdrant(ANN):
             host=self.qdrant_config.get("host"),
             path=self.qdrant_config.get("path"),
             grpc_options=self.qdrant_config.get("grpc_options"),
+            check_compatibility=False,  # Disable version check warning
         )
 
         # Initial offset is set to the number of existing rows
@@ -75,10 +76,23 @@ class Qdrant(ANN):
         offset = self.config.get("offset", 0)
         new_count = embeddings.shape[0]
         ids = list(range(offset, offset + new_count))
-        self.qdrant_client.upload_collection(
+
+        # Use upsert instead of deprecated upload_collection
+        # Convert numpy array to list of lists for compatibility
+        vectors = embeddings.tolist() if hasattr(embeddings, 'tolist') else embeddings
+
+        # Create points for upsert
+        points = [
+            {
+                "id": idx,
+                "vector": vector
+            }
+            for idx, vector in zip(ids, vectors)
+        ]
+
+        self.qdrant_client.upsert(
             collection_name=self.collection_name,
-            vectors=embeddings,
-            ids=ids,
+            points=points
         )
         self.config["offset"] += new_count
 
@@ -90,21 +104,19 @@ class Qdrant(ANN):
 
     def search(self, queries, limit):
         search_params = self.qdrant_config.get("search_params", {})
-        search_results = self.qdrant_client.search_batch(
-            collection_name=self.collection_name,
-            requests=[
-                SearchRequest(
-                    vector=query.tolist(),
-                    params=SearchParams(**search_params),
-                    limit=limit,
-                )
-                for query in queries
-            ],
-        )
 
+        # Handle batch search using query_points
+        # since search_batch has been deprecated in newer qdrant-client versions
         results = []
-        for search_result in search_results:
-            results.append([(entry.id, entry.score) for entry in search_result])
+        for query in queries:
+            search_result = self.qdrant_client.query_points(
+                collection_name=self.collection_name,
+                query=query.tolist(),
+                limit=limit,
+                search_params=SearchParams(**search_params) if search_params else None,
+            )
+            results.append([(point.id, point.score) for point in search_result.points])
+
         return results
 
     def count(self):
