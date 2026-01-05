@@ -4,11 +4,11 @@ from txtai.ann import ANN
 from grpc import RpcError
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
-from qdrant_client.http.models import (
+from qdrant_client.models import (
         PointIdsList,
         VectorParams,
         Distance,
-        SearchRequest,
+        QueryRequest,
         SearchParams,
     )
 
@@ -59,7 +59,9 @@ class Qdrant(ANN):
             raise ValueError(f"Unsupported Qdrant similarity metric: {metric_name}")
         collection_config = self.qdrant_config.get("collection_config", {})
 
-        self.qdrant_client.recreate_collection(
+        if self.qdrant_client.collection_exists(self.collection_name):
+            self.qdrant_client.delete_collection(self.collection_name)
+        self.qdrant_client.create_collection(
             collection_name=self.collection_name,
             vectors_config=VectorParams(
                 size=vector_size,
@@ -90,21 +92,22 @@ class Qdrant(ANN):
 
     def search(self, queries, limit):
         search_params = self.qdrant_config.get("search_params", {})
-        search_results = self.qdrant_client.search_batch(
+        requests = [
+            QueryRequest(
+                query=query.tolist(),
+                params=SearchParams(**search_params) if search_params else None,
+                limit=limit,
+            )
+            for query in queries
+        ]
+        search_results = self.qdrant_client.query_batch_points(
             collection_name=self.collection_name,
-            requests=[
-                SearchRequest(
-                    vector=query.tolist(),
-                    params=SearchParams(**search_params),
-                    limit=limit,
-                )
-                for query in queries
-            ],
+            requests=requests,
         )
 
         results = []
-        for search_result in search_results:
-            results.append([(entry.id, entry.score) for entry in search_result])
+        for batch_result in search_results:
+            results.append([(point.id, point.score) for point in batch_result.points])
         return results
 
     def count(self):
